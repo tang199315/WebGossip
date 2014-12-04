@@ -1,13 +1,16 @@
 import java.net.*;
 import java.io.*;
 import java.util.*;
+import java.text.SimpleDateFormat;;
 
 public class Application {
 	
 	private static Socket connection2Server;
 	private static BufferedReader inFormServer;
 	private static BufferedWriter outToServer;
-	private static ServerSocket connection2Friend;
+	private static ServerSocket incomeRequest;
+	private static User user;
+	
 	
 	private static Hashtable friend_status = new Hashtable<String,Integer>();
 
@@ -15,13 +18,53 @@ public class Application {
 		String username = "2011011437";
 		String login_err = "Incorrect login No.";
 		String login_success = "lol";
-		
 		friend_status.put("2012011454",-1);
 		String pwd = "net2014";
 		
 		
+		try{
+			incomeRequest = new ServerSocket(12345);
+			Listener portListener = new Listener(incomeRequest);
+			Thread t1 = new Thread(portListener);
+			t1.start();
+			
+			t1.
+
+			String server_ip = "192.168.1.102";
+			connection2Server = new Socket(InetAddress.getByName(server_ip),12345);
+//			inFormServer= new BufferedReader(
+//					new InputStreamReader(connection2Server.getInputStream()));
+			outToServer = new BufferedWriter(
+					new OutputStreamWriter(connection2Server.getOutputStream()));
+
+			BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+			
+			System.out.println("USER:" + connection2Server.getPort());
+			System.out.println("USER LOCAL:"+connection2Server.getLocalPort());
+			
+			while(true){
+				String msg = br.readLine();
+				outToServer.write(msg+(char)3);
+				outToServer.flush();
+			}
+			
+
+			
+		}
+		catch(IOException ex){
+			System.out.println(ex);
+			
+		}
+
+		
+		
+		
+/*		
 		try {
-			connection2Friend = new ServerSocket(12345);
+			initSocket();
+			//create a thread for port listener
+			Listener portListener = new Listener(incomeRequest);
+			Thread t1 = new Thread(portListener);
 			
 			
 			connect2Server();
@@ -34,10 +77,16 @@ public class Application {
 		catch (UnknownHostException ex){
 			System.out.println(ex);
 		}
-		catch (IOException ex) { 
+		catch (IOException ex){ 
 			System.out.println(ex);
 		} 
+		*/
     }
+	
+	public static void initSocket() throws IOException{
+		incomeRequest = new ServerSocket(12345);
+		connect2Server();
+	} 
 	
 	public static void connect2Server() throws IOException,UnknownHostException{
 		String server_ip = "166.111.180.60";
@@ -72,6 +121,9 @@ public class Application {
 	}
 	public static boolean logout(String username)throws IOException{
 		String reply = queryServer("logout" + username);
+		//to deal with the ongoing thread
+		connection2Server.close();
+		
 		if ("loo".contentEquals(reply))
 			return true;
 		else
