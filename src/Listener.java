@@ -1,11 +1,19 @@
 import java.net.*;
 import java.io.*;
+import java.util.*;
 
 public class Listener implements Runnable {
 	private ServerSocket incomeRequest;
+	private CentralServerSocket connection2CentralServer;
+	private HashMap<String, Socket> friend_status;
+	private User user;
 	
-	public Listener(ServerSocket incomeRequest){
+	public Listener(ServerSocket incomeRequest, CentralServerSocket connection2CentralServer,
+					User user, HashMap<String, Socket> friend_status){
 		this.incomeRequest = incomeRequest;
+		this.connection2CentralServer = connection2CentralServer;
+		this.user = user;
+		this.friend_status = friend_status;
 	}
 	
 	public void run(){
@@ -17,7 +25,8 @@ public class Listener implements Runnable {
 				while(true){
 					connection = incomeRequest.accept();	
 					//create a new thread for a new income connection2Friend
-					Session new_session = new Session(connection);
+					Session new_session = new Session(connection,connection2CentralServer,
+														user, friend_status,false);
 					Thread t = new Thread(new_session);
 					t.start();
 				}
