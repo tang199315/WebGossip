@@ -34,7 +34,7 @@ public class Session extends JDialog implements Runnable{
 	private CentralServerSocket connection2CentralServer;
 	private BufferedReader msgIn;
 	private BufferedWriter msgOut;
-	private HashMap<String, Socket> friend_status;
+	private HashMap<String, Session> friend_status;
 	private User user;
 	
 	private TextArea textField_1;
@@ -42,7 +42,7 @@ public class Session extends JDialog implements Runnable{
 	private String friend_name;
 	
 	public Session(Socket connection, CentralServerSocket connection2CentralServer,
-					User user, HashMap<String,Socket> friend_status, boolean isActive) 
+					User user, HashMap<String,Session> friend_status, boolean isActive) 
 					throws IOException{
 		// TCP/IP Connection init 
 		this.connection = connection;
@@ -93,7 +93,7 @@ public class Session extends JDialog implements Runnable{
 						if (reply_str.startsWith("HELO")){
 							//TODO
 							friend_name = reply_str.split("_")[1];
-							friend_status.put(friend_name, connection); //refresh friend status
+							friend_status.put(friend_name, this); //refresh friend status
 							this.setTitle(friend_name);
 							
 						}else if (reply.toString().startsWith("BYEBYE")){

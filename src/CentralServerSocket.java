@@ -6,20 +6,35 @@ public class CentralServerSocket {
 	private BufferedReader inFormServer;
 	private BufferedWriter outToServer;
 	private String server_ip;
+	private int port = 8000;
 	
-	public CentralServerSocket(String ip){
-		this.server_ip = ip;
-	}
-	
-	public void connect() throws IOException,UnknownHostException{
-		connection2Server = new Socket(InetAddress.getByName(server_ip),8000);
+	public CentralServerSocket() throws IOException,UnknownHostException {
+		this.server_ip = "166.111.180.60";
+		this.port = 8000;
+		
+		connection2Server = new Socket(InetAddress.getByName(server_ip),port);
 		inFormServer= new BufferedReader(
 				new InputStreamReader(connection2Server.getInputStream()));
 		
 		outToServer = new BufferedWriter(
 				new OutputStreamWriter(connection2Server.getOutputStream()));
+
 	}
 	
+	public CentralServerSocket(String ip, int port) throws IOException,UnknownHostException {
+		this.server_ip = ip;
+		this.port = port;
+		
+		connection2Server = new Socket(InetAddress.getByName(server_ip),port);
+		inFormServer= new BufferedReader(
+				new InputStreamReader(connection2Server.getInputStream()));
+		
+		outToServer = new BufferedWriter(
+				new OutputStreamWriter(connection2Server.getOutputStream()));
+		
+	}
+	
+
 	public String query(String query) throws IOException{
 		outToServer.write(query);
 		outToServer.flush();
@@ -31,8 +46,8 @@ public class CentralServerSocket {
 		return reply.toString();
 	}
 	
-	public boolean login(String username, String pwd) throws IOException{
-		String reply = query(username + "_" + pwd);
+	public boolean login(User user) throws IOException{
+		String reply = query(user.getName() + "_" + user.getPWD());
 		if ("lol".contentEquals(reply))
 			return true;
 		else
@@ -50,8 +65,10 @@ public class CentralServerSocket {
 	}
 	
 	public void close()throws IOException{
-		outToServer.flush();
-		connection2Server.close();
+		if (connection2Server != null){
+			outToServer.flush();
+			connection2Server.close();
+		}
 	}
 
 }

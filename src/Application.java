@@ -12,108 +12,82 @@ public class Application {
 	private static CentralServerSocket connection2CentralServer;
 	private static ServerSocket incomeRequest;
 	private static User user;
-	private static HashMap<String, Socket> friend_status = new HashMap<String,Socket>();
+	private static HashMap<String, Session> friend_status = new HashMap<String,Session>();
 	
 
 	public static void main(String[] args){
-		String username = "2011011437";
 		String login_err = "Incorrect login No.";
-		String login_success = "lol";
-		User user = new User("2011011437");
-		friend_status.put("2012011454",connection2Server);
 		
+		friend_status.put("2012011454",null);
 		String pwd = "net2014";
 		
 		try{
-			//initSocket();
-			if ("HELO_2011011437".startsWith("HELO"))
-				System.out.println("OVG");
-				
+			//Connect Central Server
+			connection2CentralServer = new CentralServerSocket();
 			
+			//Login in
+			user = new User("201101144","net2014");
+			Login ln = new Login();
+			
+			while (!connection2CentralServer.login(user)){
+				ln.reset();
+				ln.showError();
+				while(!ln.getJudge()); //waiting for login
+				System.out.println(ln.getUsername());
+				System.out.println(ln.getPWD());
+				user = new User(ln.getUsername(),ln.getPWD());
+				//user = new User("2011011437","net2014");  //OK
+			}
+			
+			System.out.println("login OK");
+			ln.setVisible(false);
+			
+			//===========
 			incomeRequest = new ServerSocket(12345);
 			Listener portListener = new Listener(incomeRequest,connection2CentralServer,
 										user,friend_status);
 			Thread t1 = new Thread(portListener);
 			t1.start();
-
-			String server_ip = "192.168.1.100";
-			connection2Server = new Socket(InetAddress.getByName(server_ip),12345);
-//			inFormServer= new BufferedReader(
-//					new InputStreamReader(connection2Server.getInputStream()));
-			outToServer = new BufferedWriter(
-					new OutputStreamWriter(connection2Server.getOutputStream()));
-
-			BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 			
-//			System.out.println("USER:" + connection2Server.getPort());
-//			System.out.println("USER LOCAL:"+connection2Server.getLocalPort());
+			String server_ip = "127.0.0.1";
+			connection2Server = new Socket(InetAddress.getByName(server_ip),12345);
 			
 			Session myChat = new Session(connection2Server,connection2CentralServer,
 					user, friend_status, true);
-			//myChat.sayHello();
+			myChat.sayHello();
 			Thread t2 = new Thread(myChat);
 			t2.start();
 			
-			while(true){
-				String msg = br.readLine();
-				outToServer.write(msg+(char)3);
-				outToServer.flush();
-			}
+			
+			//TODO use while to wait??
+			while(true);
+			
 		}
 		catch(IOException ex){
-			System.out.println(ex);
-			
+			ex.printStackTrace();
 		}
 		finally{
 			try{
-				if (incomeRequest!=null | connection2CentralServer!=null){
+				if (incomeRequest!=null ){
 					incomeRequest.close();
+				}
+				if (connection2CentralServer!=null){
 					connection2CentralServer.close();
 				}
 				//close all active sessions
 				Iterator iter = friend_status.entrySet().iterator();
 				while (iter.hasNext()){
-					Map.Entry<String,Socket> entry = (Map.Entry<String,Socket>) iter.next();
-					Socket conn = entry.getValue();
+					Map.Entry<String,Session> entry = (Map.Entry<String,Session>) iter.next();
+					Session session = entry.getValue();
 					if (entry.getValue() != null)
-						conn.close();	
+						session.closeConnection();
+	
 				}
 			}catch(IOException ex){
-				System.out.println(ex);
+				ex.printStackTrace();
 			}
-
-			
 		}
-/*		
-		try {
-			initSocket();
-			//create a thread for port listener
-			Listener portListener = new Listener(incomeRequest);
-			Thread t1 = new Thread(portListener);
-			
-			
-			//create a Thread for user to invoke a conversation
-			
-			connect2Server();
-			if (login(username,pwd))
-				System.out.println("Login Sucessfully");
-			
-			if (logout(username))
-				System.out.println("Logout Sucessfully");
-        } 
-		catch (UnknownHostException ex){
-			System.out.println(ex);
-		}
-		catch (IOException ex){ 
-			System.out.println(ex);
-		} 
-		*/
     }
-	
-	public static void initSocket() throws IOException{
-		incomeRequest = new ServerSocket(12345);
-		connection2CentralServer = new CentralServerSocket("166.111.180.60");
-	}
 	
 	public static void close(){
 		//TODO
