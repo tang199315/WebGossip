@@ -35,7 +35,7 @@ public class Listener implements Runnable {
 
 			}
 			catch(IOException ex){
-				System.out.println(ex);
+				ex.printStackTrace();
 			}// end catch
 			finally{
 				if (connection!=null) connection.close();
@@ -44,7 +44,7 @@ public class Listener implements Runnable {
 	}
 	catch(IOException ex){
 		//Desired Port may be occupied 
-		System.out.println(ex);
+		ex.printStackTrace();
 	}
 	
 }

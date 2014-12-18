@@ -16,6 +16,9 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 
 import javax.swing.JTextPane;
 
@@ -38,34 +41,18 @@ public class Login extends JDialog {
 	private boolean waitingJudge = false;
 	private JEditorPane textField_4;
 
-	/**
-	 * Launch the application.
-	 */
-//	public static void main(String[] args) {
-//		try {
-//			Login dialog = new Login();
-//			dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-//			dialog.setVisible(true);
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
-//	}
-
-	/**
-	 * Create the dialog.
-	 */
 	public Login() {
 		setBackground(Color.GRAY);
 		init();   //你默认是对的初始化
-		this.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+		this.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
 		this.setVisible(true);
 		
-		//////////////////////////////////////////////////////////////////////
-		
-		//你在这里可以创建你的方法，发送用户名userName和密码password，得到响应之后你进行判断是否登陆成功从而改变布尔型waitingJudge的值
-		//用一个for循环延时大概一秒左右，然后textField_4.setText("请输入用户名和密码");再复位提示文本框的内容。
-		
-		//////////////////////////////////////////////////////////////////////
+		//Window Closing handler
+		this.addWindowListener(new WindowAdapter(){
+			public void windowClosing(WindowEvent event){
+				System.exit(1);
+			}
+		});
 	}
 	
 	
@@ -133,6 +120,10 @@ public class Login extends JDialog {
 				userName = textField.getText();
 				password = textField_3.getText();
 				waitingJudge = true;
+				
+				//TODO: Delete the following lines before production
+				userName="2011011437";
+				password = "net2014";
 			}
 		});	
 		GroupLayout gl_contentPanel = new GroupLayout(contentPanel);

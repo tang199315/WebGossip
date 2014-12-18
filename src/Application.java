@@ -28,15 +28,11 @@ public class Application {
 			//Login in
 			user = new User("201101144","net2014");
 			Login ln = new Login();
-			
 			while (!connection2CentralServer.login(user)){
 				ln.reset();
 				ln.showError();
 				while(!ln.getJudge()); //waiting for login
-				System.out.println(ln.getUsername());
-				System.out.println(ln.getPWD());
 				user = new User(ln.getUsername(),ln.getPWD());
-				//user = new User("2011011437","net2014");  //OK
 			}
 			
 			System.out.println("login OK");
@@ -72,6 +68,7 @@ public class Application {
 					incomeRequest.close();
 				}
 				if (connection2CentralServer!=null){
+					connection2CentralServer.logout(user);
 					connection2CentralServer.close();
 				}
 				//close all active sessions

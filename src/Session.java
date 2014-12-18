@@ -7,6 +7,8 @@ import java.awt.FlowLayout;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
@@ -36,10 +38,17 @@ public class Session extends JDialog implements Runnable{
 	private BufferedWriter msgOut;
 	private HashMap<String, Session> friend_status;
 	private User user;
+	private FileInputStream filestream;
+	private File fileInfo;
 	
 	private TextArea textField_1;
 	private TextArea textField;
 	private String friend_name;
+	
+	
+	private final String UNIT_DELIMITER = String.valueOf((char)31);
+	private final char END_DELIMITER = (char)3;
+	private final char CMD_DELIMITER = (char)2; 
 	
 	public Session(Socket connection, CentralServerSocket connection2CentralServer,
 					User user, HashMap<String,Session> friend_status, boolean isActive) 
@@ -74,45 +83,100 @@ public class Session extends JDialog implements Runnable{
 	
 	public void run(){
 		System.out.println("InSession");
-		char escape_char = (char)3;
 		//create thread for reading text from message box
 		try{
+			//Inform the other side my identity
 			sayHello();
 			
 			StringBuffer reply = new StringBuffer();
-			int c;
+			int c = 0;
 			while(true){
 				//Get Message
-				if ( msgIn.ready() && (c = msgIn.read()) != -1 )
+				if ( msgIn.ready() && (c = msgIn.read()) != -1)
 					reply.append((char) c);
 				
-				//Parse Message
+				//An integral message received
 				if (reply.length()>1 && 
-					reply.charAt(reply.length()-1) == escape_char){
-					String reply_str = reply.toString().substring(0, reply.length()-1);
+					reply.charAt(reply.length()-1) == END_DELIMITER){
+					String reply_str = null;
+					//Parse a command
+					if (reply.charAt(0) == CMD_DELIMITER){
+						reply_str = reply.toString().substring(1, reply.length()-1);
+						//HELO command
 						if (reply_str.startsWith("HELO")){
 							//TODO
-							friend_name = reply_str.split("_")[1];
+							friend_name = reply_str.split(UNIT_DELIMITER)[1];
 							friend_status.put(friend_name, this); //refresh friend status
-							this.setTitle(friend_name);
-							
-						}else if (reply.toString().startsWith("BYEBYE")){
+							this.setTitle(friend_name);	
+						//BYEBYE command
+						}else if (reply_str.startsWith("BYEBYE")){
+									//TODO
+						
+						//File request command
+						}else if(reply_str.startsWith("FILEREQ")){
 							//TODO
-							
-						}else{
-							//Display msg
-							if (this.isVisible()==false)
-								this.setVisible(true);
+							this.setVisible(true);
+							String fileName = reply_str.split(UNIT_DELIMITER)[1];
+							String size = reply_str.split(UNIT_DELIMITER)[2];
+							if ((JOptionPane.showOptionDialog(null,
+									"您想接受文件  " + fileName + " 吗？", "消息",
+									JOptionPane.YES_NO_OPTION, 0, null, null, null)) == 0){
+								//Choose the path to save
+								JFileChooser jfc = new JFileChooser();
+								jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+								jfc.setDialogTitle("选择保存位置");
+								String save_dirpath = null;
+							    if(jfc.showOpenDialog(Session.this)==JFileChooser.APPROVE_OPTION ){
+							    	save_dirpath = jfc.getSelectedFile().getAbsolutePath();
+							    }
+							    
+								//TODO
+								ServerSocket listener = new ServerSocket(0);
+								acceptFileTransfer(listener.getLocalPort());
+								Socket fileConnection = listener.accept(); //Wait for connection
+								listener.close();
+
+							    FileReceiver fr;
+							    if (save_dirpath != null){ 
+							    	fr = new FileReceiver(fileConnection,save_dirpath + "\\" + fileName );
+							    }else{
+							    	fr = new FileReceiver(fileConnection,fileName);
+							    }
+								Thread t= new Thread(fr);
+								t.start(); 
+							}else{
+								//Send denial message
+								denyFileTransfer();
+							}
+						//File transfer acceptance command	
+						}else if(reply_str.startsWith("FILEACPT")){
+							//TODO: Starting Send
+							int port = Integer.parseInt(reply_str.split(UNIT_DELIMITER)[1]);
+							FileSender fs = new FileSender(connection.getInetAddress(),port,fileInfo.getAbsolutePath());
+							Thread t = new Thread(fs);
+							t.start();
+						//File transfer denial command			
+						}else if(reply_str.startsWith("FILEDENY")){
+							//TODO:Display Denial message
+							System.out.println("Deny");
+						}
+					}else{
+						
+					//Show the Chat message to User
+						reply_str = reply.toString().substring(0, reply.length()-1);
+							this.setVisible(true);
 							display(reply_str);
 							System.out.println(reply_str);
-						}
-						reply.delete(0,reply.length()); //clean buffer
+						
+					}
+					//clean buffer
+					reply.delete(0,reply.length()); 
 				}
 			}
 		}
-		
+	
 		catch(IOException ex){
-			System.out.println(ex);
+			ex.printStackTrace();
 		}
 	}
 	
@@ -121,17 +185,24 @@ public class Session extends JDialog implements Runnable{
 		
 	}
 	
-	public void sayHello() throws IOException{
-		char escape_char = (char)3;
-		String s = "HELO_" + user.getName() + escape_char;
+	public void sendData(String s) throws IOException{
 		msgOut.write(s);
 		msgOut.flush();
-		
 	}
+	
+	public void sayHello() throws IOException{ sendData (CMD_DELIMITER + "HELO" + 
+			UNIT_DELIMITER + user.getName() + END_DELIMITER);}
+	
+	public void acceptFileTransfer(int port) throws IOException{ sendData( CMD_DELIMITER +
+			"FILEACPT" +  UNIT_DELIMITER  + Integer.toString(port) +END_DELIMITER); }
+	
+	public void denyFileTransfer() throws IOException{ sendData(CMD_DELIMITER + 
+			"FILEDENY" + END_DELIMITER); }
+	
+	
 	public void sendMessage() throws IOException{
 		//TO DO
 		//Check if the other side is online
-		char escape_char = (char)3;
 		String dataStr = getDateInString();
 		
 		//GUI
@@ -139,12 +210,21 @@ public class Session extends JDialog implements Runnable{
 		textField.setText("");               // clear the Text Box
 		if (s.length() > 0) {
 			s = user.getName() + " " + dataStr  + "\n" + 
-					s  + escape_char;
+					s  + END_DELIMITER;
+			sendData(s);
 		}
-		//TCP/IP
-		msgOut.write(s);
-		msgOut.flush();
-		
+
+	}
+	
+	public void sendFileTransferRequest(String filename, long size)throws IOException{
+		//TO DO
+		//Check if the other side is online
+		if (filename.length() > 0) {
+			String s = CMD_DELIMITER + "FILEREQ" + UNIT_DELIMITER + 
+			filename + UNIT_DELIMITER + Long.toString(size) + END_DELIMITER;
+			//TCP/IP
+			sendData(s);
+		}
 	}
 
 	public String getDateInString(){
@@ -176,10 +256,30 @@ public class Session extends JDialog implements Runnable{
 				try{
 					sendMessage();
 				}catch(IOException ex){
-					//TODO
+					ex.printStackTrace();
 				}			
 			}
 		});
+		
+		JButton button_1 = new JButton("\u6587\u4EF6");
+		button_1.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				JFileChooser jfc = new JFileChooser();
+			    if(jfc.showOpenDialog(Session.this)==JFileChooser.APPROVE_OPTION ){
+			    	String filepath = jfc.getSelectedFile().getAbsolutePath();
+			    	fileInfo = new File(filepath);
+			    	//Send file transfer request
+			    	try{
+				    	sendFileTransferRequest(fileInfo.getName(),fileInfo.length());
+			    	}
+			    	catch(IOException ex){
+						ex.printStackTrace();
+			    	}
+
+			    }
+			}
+		});
+		
 		GroupLayout groupLayout = new GroupLayout(getContentPane());
 		groupLayout.setHorizontalGroup(
 			groupLayout.createParallelGroup(Alignment.LEADING)
@@ -190,7 +290,9 @@ public class Session extends JDialog implements Runnable{
 							.addGap(10)
 							.addComponent(textField, GroupLayout.PREFERRED_SIZE, 445, GroupLayout.PREFERRED_SIZE)
 							.addGap(22)
-							.addComponent(button)))
+							.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+									.addComponent(button_1)
+									.addComponent(button))))
 					.addGap(10))
 		);
 		groupLayout.setVerticalGroup(
@@ -203,7 +305,10 @@ public class Session extends JDialog implements Runnable{
 							.addComponent(textField, GroupLayout.PREFERRED_SIZE, 106, GroupLayout.PREFERRED_SIZE))
 						.addGroup(groupLayout.createSequentialGroup()
 							.addGap(50)
-							.addComponent(button))))
+							.addComponent(button)
+							.addPreferredGap(ComponentPlacement.UNRELATED)
+							.addComponent(button_1)
+							)))
 		);
 		getContentPane().setLayout(groupLayout);
 	}

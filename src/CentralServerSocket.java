@@ -54,8 +54,8 @@ public class CentralServerSocket {
 			return false;
 	}
 	
-	public boolean logout(String username)throws IOException{
-		String reply = query("logout" + username);
+	public boolean logout(User user)throws IOException{
+		String reply = query("logout" + user.getName());
 		//to deal with the ongoing thread
 		close();
 		if ("loo".contentEquals(reply))
