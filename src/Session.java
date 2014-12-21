@@ -38,8 +38,7 @@ public class Session extends JDialog implements Runnable{
 	private BufferedWriter msgOut;
 	private HashMap<String, Session> friend_status;
 	private User user;
-	private FileInputStream filestream;
-	private File fileInfo;
+	private File sendfileInfo;
 	
 	private TextArea textField_1;
 	private TextArea textField;
@@ -152,7 +151,7 @@ public class Session extends JDialog implements Runnable{
 						}else if(reply_str.startsWith("FILEACPT")){
 							//TODO: Starting Send
 							int port = Integer.parseInt(reply_str.split(UNIT_DELIMITER)[1]);
-							FileSender fs = new FileSender(connection.getInetAddress(),port,fileInfo.getAbsolutePath());
+							FileSender fs = new FileSender(connection.getInetAddress(),port,sendfileInfo.getAbsolutePath());
 							Thread t = new Thread(fs);
 							t.start();
 						//File transfer denial command			
@@ -267,10 +266,10 @@ public class Session extends JDialog implements Runnable{
 				JFileChooser jfc = new JFileChooser();
 			    if(jfc.showOpenDialog(Session.this)==JFileChooser.APPROVE_OPTION ){
 			    	String filepath = jfc.getSelectedFile().getAbsolutePath();
-			    	fileInfo = new File(filepath);
+			    	sendfileInfo = new File(filepath);
 			    	//Send file transfer request
 			    	try{
-				    	sendFileTransferRequest(fileInfo.getName(),fileInfo.length());
+				    	sendFileTransferRequest(sendfileInfo.getName(),sendfileInfo.length());
 			    	}
 			    	catch(IOException ex){
 						ex.printStackTrace();

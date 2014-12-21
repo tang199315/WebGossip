@@ -1,6 +1,4 @@
-import java.net.*;
-import java.io.*;
-import java.util.*;
+
 import java.awt.BorderLayout;
 import java.awt.EventQueue;
 
@@ -24,35 +22,51 @@ import java.awt.SystemColor;
 
 import javax.swing.JButton;
 
+import java.io.*;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
+public class MainUI extends JFrame {
 
-public class Application extends JFrame {
-	
-	private Socket connection2Server;
-	private BufferedReader inFormServer;
-	private BufferedWriter outToServer;
-	
-	private CentralServerSocket connection2CentralServer;
-	private ServerSocket incomeRequest;
-	private User user;
-	private HashMap<String, Session> friend_status = new HashMap<String,Session>();
-	
 	private JPanel contentPane;
 	private String selectedFriend;   //选中的好友的学号
 	private List list = new List();    //列表
 	private JButton button = new JButton("\u767B\u51FA");   //登出按钮
 	
+
+	/**
+	 * Launch the application.
+	 */
+	public static void main(String[] args) {
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				try {
+					MainUI frame = new MainUI();
+					frame.setVisible(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+
+	/**
+	 * Create the frame.
+	 * @throws IOException 
+	 */
+	public MainUI() throws IOException {
+		super("欢迎");  //这句不要动，貌似只能放在这里		
+		init();  //默认是对的初始化			
+		getList();  //得到列表的内容
+		buttonAction();  //按下登出按钮的事件		
+		closeWindow();  //点击小红叉的相应事件
+	}
 	
-	public Application(User user){
-		this.user = user;
-		//UI
-		init();
-		
-		//init event Listener
+	
+	/**点击小红叉的相应事件*/
+	public void closeWindow() {
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosed(WindowEvent e) {
@@ -62,7 +76,10 @@ public class Application extends JFrame {
 				 */	
 			}
 		});
-		
+	}
+	
+	/**按下登出按钮的事件*/
+	public void buttonAction() {
 		button.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {     //登出响应事件
 				/**
@@ -71,116 +88,11 @@ public class Application extends JFrame {
 				 */				
 			}
 		});
-		
-		this.setVisible(false);
-		
 	}
-
-	public static void main(String[] args){
-		String login_err = "Incorrect login No.";
-		
-		String pwd = "net2014";
-		
-		User user_temp = new User("201101144","net2014");
-		
-		
-		try{
-			//Connect Central Server
-			CentralServerSocket connection2CentralServer = new CentralServerSocket();
-			
-			//Login in
-			Login ln = new Login();
-			while (!connection2CentralServer.login(user_temp)){
-				ln.reset();
-				ln.showError();
-				while(!ln.getJudge()); //waiting for login
-				user_temp = new User(ln.getUsername(),ln.getPWD());
-			}
-			
-			System.out.println("login OK");
-			ln.setVisible(false);
-			connection2CentralServer.close();
-			
-			//Launch Application
-			Application app = new Application(user_temp);
-			app.appStart();
-			
-		}
-		catch(IOException ex){
-			ex.printStackTrace();
-		}
-    }
 	
-	public void appStart() {
-		try{
-			//Connection to CentralCenter
-			CentralServerSocket connection2CentralServer = new CentralServerSocket();
-			
-			incomeRequest = new ServerSocket(12345);
-			Listener portListener = new Listener(incomeRequest,connection2CentralServer,
-										user,friend_status);
-			Thread t1 = new Thread(portListener);
-			t1.start();
-			
-			String server_ip = "127.0.0.1";
-			connection2Server = new Socket(InetAddress.getByName(server_ip),12345);
-			
-			Session myChat = new Session(connection2Server,connection2CentralServer,
-					user, friend_status, true);
-			
-			this.setVisible(true);
-			
-			
-			//TODO testing 
-			myChat.sayHello();
-			Thread t2 = new Thread(myChat);
-			t2.start();
-			
-			
-			//TODO use while to wait??
-			while(true);
-
-		}
-		catch(IOException ex){
-			ex.printStackTrace();
-		}
-		finally{
-			try{
-				if (incomeRequest!=null ){
-					incomeRequest.close();
-				}
-				if (connection2CentralServer!=null){
-					connection2CentralServer.logout(user);
-					connection2CentralServer.close();
-				}
-				//close all active sessions
-				Iterator iter = friend_status.entrySet().iterator();
-				while (iter.hasNext()){
-					Map.Entry<String,Session> entry = (Map.Entry<String,Session>) iter.next();
-					Session session = entry.getValue();
-					if (entry.getValue() != null)
-						session.closeConnection();
-	
-				}
-			}catch(IOException ex){
-				ex.printStackTrace();
-			}
-		}
-		
-
-		
-	} 
-
-	
-	public void close(){
-		//TODO
-	}
-
-/**GUI Logic=================================*/
-
 	
 	/**得到列表的内容*/
-	public void initFriendList() throws IOException {
+	public void getList() throws IOException {
 		BufferedReader br = new BufferedReader(new FileReader("S.txt"));  //读文本，文本的名字是S.txt,"\"比较特殊，
                                                                                //所以不是123.txt.
         String data = br.readLine();  //从S。txt里面读出来的一行
@@ -191,16 +103,8 @@ public class Application extends JFrame {
 	}
 	
 	
-	//GUI init
-	public void init(){ 
-		try{
-			initFriendList();
-		}
-		catch (IOException ex){
-			ex.printStackTrace();
-		}
-
-		
+	/**默认是对的初始化*/
+	public void init(){                      
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 321, 318);
 		contentPane = new JPanel();
