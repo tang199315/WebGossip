@@ -119,11 +119,12 @@ public class Login extends JDialog {
 			public void actionPerformed(ActionEvent e) {
 				userName = textField.getText();
 				password = textField_3.getText();
-				waitingJudge = true;
+
 				
 				//TODO: Delete the following lines before production
 				userName="2011011437";
 				password = "net2014";
+				waitingJudge = true;
 			}
 		});	
 		GroupLayout gl_contentPanel = new GroupLayout(contentPanel);

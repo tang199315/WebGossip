@@ -76,7 +76,7 @@ public class Application extends JFrame {
 		
 	}
 
-	public static void main(String[] args){
+	public static void main(String[] args) throws InterruptedException{
 		String login_err = "Incorrect login No.";
 		
 		String pwd = "net2014";
@@ -93,7 +93,7 @@ public class Application extends JFrame {
 			while (!connection2CentralServer.login(user_temp)){
 				ln.reset();
 				ln.showError();
-				while(!ln.getJudge()); //waiting for login
+				while(!ln.getJudge()){Thread.sleep(20);} //waiting for login
 				user_temp = new User(ln.getUsername(),ln.getPWD());
 			}
 			
