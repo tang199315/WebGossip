@@ -5,6 +5,7 @@ import java.awt.BorderLayout;
 import java.awt.EventQueue;
 
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
@@ -42,15 +43,58 @@ public class Application extends JFrame {
 	private HashMap<String, Session> friend_status = new HashMap<String,Session>();
 	
 	private JPanel contentPane;
-	private String selectedFriend;   //选中的好友的学号
 	private List list = new List();    //列表
 	private JButton button = new JButton("\u767B\u51FA");   //登出按钮
 	
 	
-	public Application(User user){
-		this.user = user;
+	public Application(){
 		//UI
-		init();
+		GUIinit();
+		
+		list.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if(e.getClickCount() == 2){               //设置双击事件
+					String selectedFriend = list.getSelectedItem();   //可以得到双击后选中的好友的学号
+					
+					//TODO
+					System.out.println(selectedFriend);
+					
+					Session currentSession = null;
+					//If there is a ongoing session run in Deamon mode, set visible
+					
+					if( (currentSession = friend_status.get(selectedFriend) )!=null){
+						currentSession.setVisible(true);
+					}else{
+						//Try to init a new session
+						String IP=null;
+						try{
+							if( (IP = connection2CentralServer.isOnline(selectedFriend)) != null){
+								System.out.println("friend ip" + IP);
+								//Set up new session
+								Session newSession = new Session(new Socket(InetAddress.getByName(IP),0),
+										connection2CentralServer,user, friend_status, true);
+								//Refresh friend list
+								friend_status.put(selectedFriend,newSession);
+								Thread t = new Thread(newSession);
+								t.start();
+							}
+							else{
+								//friend Offline warning
+						         JOptionPane.showOptionDialog(null,
+						        		  "朋友不在線", "消息",
+						              JOptionPane.CLOSED_OPTION, 0, null, null, null);
+							}
+						}
+						catch (IOException ex){
+							ex.printStackTrace();
+						}
+
+						
+					}
+				}
+			}
+		});
 		
 		//init event Listener
 		addWindowListener(new WindowAdapter() {
@@ -71,24 +115,32 @@ public class Application extends JFrame {
 				 */				
 			}
 		});
+	
+		try{
+			initFriendList();
+		}
+		catch (IOException ex){
+			ex.printStackTrace();
+		}
 		
 		this.setVisible(false);
 		
 	}
 
-	public static void main(String[] args) throws InterruptedException{
-		String login_err = "Incorrect login No.";
-		
-		String pwd = "net2014";
-		
-		User user_temp = new User("201101144","net2014");
-		
-		
+	public static void main(String[] args) {
+			//Launch Application
+			Application app = new Application();
+			app.appStart();
+
+    }
+	
+	public void appStart(){
 		try{
-			//Connect Central Server
-			CentralServerSocket connection2CentralServer = new CentralServerSocket();
+			//Connection to CentralCenter
+			connection2CentralServer = new CentralServerSocket();
 			
 			//Login in
+			User user_temp = new User("xxx","xxx");
 			Login ln = new Login();
 			while (!connection2CentralServer.login(user_temp)){
 				ln.reset();
@@ -96,52 +148,29 @@ public class Application extends JFrame {
 				while(!ln.getJudge()){Thread.sleep(20);} //waiting for login
 				user_temp = new User(ln.getUsername(),ln.getPWD());
 			}
-			
+			this.user = user_temp;
 			System.out.println("login OK");
 			ln.setVisible(false);
-			connection2CentralServer.close();
 			
-			//Launch Application
-			Application app = new Application(user_temp);
-			app.appStart();
-			
-		}
-		catch(IOException ex){
-			ex.printStackTrace();
-		}
-    }
-	
-	public void appStart() {
-		try{
-			//Connection to CentralCenter
-			CentralServerSocket connection2CentralServer = new CentralServerSocket();
-			
+			//Init network socket
 			incomeRequest = new ServerSocket(12345);
 			Listener portListener = new Listener(incomeRequest,connection2CentralServer,
 										user,friend_status);
 			Thread t1 = new Thread(portListener);
 			t1.start();
 			
-			String server_ip = "127.0.0.1";
-			connection2Server = new Socket(InetAddress.getByName(server_ip),12345);
-			
-			Session myChat = new Session(connection2Server,connection2CentralServer,
-					user, friend_status, true);
-			
 			this.setVisible(true);
 			
-			
-			//TODO testing 
-			myChat.sayHello();
-			Thread t2 = new Thread(myChat);
-			t2.start();
-			
-			
+			//TODO testing
+			System.out.println(connection2CentralServer.isOnline("2011011437"));	
 			//TODO use while to wait??
 			while(true);
 
 		}
 		catch(IOException ex){
+			ex.printStackTrace();
+		}
+		catch(InterruptedException ex){
 			ex.printStackTrace();
 		}
 		finally{
@@ -186,35 +215,21 @@ public class Application extends JFrame {
         String data = br.readLine();  //从S。txt里面读出来的一行
 		while( data!=null){    //while用于把列表内容从文本里面全读出来
 		      list.add(data);      //加到列表里面
+		      friend_status.put(data, null);
 		      data = br.readLine(); //接着读下一行  
 		}	
 	}
 	
 	
 	//GUI init
-	public void init(){ 
-		try{
-			initFriendList();
-		}
-		catch (IOException ex){
-			ex.printStackTrace();
-		}
+	public void GUIinit(){ 
 
-		
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 321, 318);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
-		list.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				if(e.getClickCount() == 2){               //设置双击事件
-					selectedFriend = list.getSelectedItem();   //可以得到双击后选中的好友的学号
-					System.out.println(selectedFriend);
-				}
-			}
-		});		
+		
 		JEditorPane editorPane = new JEditorPane();
 		editorPane.setText("\u597D\u53CB\u5217\u8868");
 		editorPane.setBackground(SystemColor.menu);

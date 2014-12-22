@@ -58,10 +58,21 @@ public class CentralServerSocket {
 		String reply = query("logout" + user.getName());
 		//to deal with the ongoing thread
 		close();
-		if ("loo".contentEquals(reply))
+		if ("loo".contentEquals(reply)){
+			//TODO:remove
+			System.out.println("logout OK");
 			return true;
+		}
 		else
 			return false;
+	}
+	
+	public String isOnline(String friend_name) throws IOException{
+		String reply = query("q" + friend_name);
+		if ("n".contentEquals(reply) || "Incorrect No.".contentEquals(reply))
+			return null;
+		else
+			return reply;
 	}
 	
 	public void close()throws IOException{

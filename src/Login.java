@@ -122,8 +122,8 @@ public class Login extends JDialog {
 
 				
 				//TODO: Delete the following lines before production
-				userName="2011011437";
-				password = "net2014";
+				//userName="2011011437";
+				//password = "net2014";
 				waitingJudge = true;
 			}
 		});	
