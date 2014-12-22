@@ -109,7 +109,12 @@ public class Session extends JDialog implements Runnable{
 							this.setTitle(friend_name);	
 						//BYEBYE command
 						}else if (reply_str.startsWith("BYEBYE")){
-									//TODO
+					        JOptionPane.showOptionDialog(null,"對方己經下線", "消息",
+					        		JOptionPane.CLOSED_OPTION, 0, null, null, null);
+							connection.close();
+							friend_status.put(friend_name, null);
+							setVisible(false);
+							
 						
 						//File request command
 						}else if(reply_str.startsWith("FILEREQ")){
@@ -128,37 +133,52 @@ public class Session extends JDialog implements Runnable{
 								String save_dirpath = null;
 							    if(jfc.showOpenDialog(Session.this)==JFileChooser.APPROVE_OPTION ){
 							    	save_dirpath = jfc.getSelectedFile().getAbsolutePath();
-							    }
-							    
-								//TODO
-								ServerSocket listener = new ServerSocket(0);
-								acceptFileTransfer(listener.getLocalPort());
-								Socket fileConnection = listener.accept(); //Wait for connection
-								listener.close();
+									//TODO
+									ServerSocket listener = new ServerSocket(0);
+									acceptFileTransfer(listener.getLocalPort());
+									Socket fileConnection = listener.accept(); //Wait for connection
+									listener.close();
 
-							    FileReceiver fr;
-							    if (save_dirpath != null){ 
-							    	fr = new FileReceiver(fileConnection,save_dirpath + File.separator + fileName );
+								    FileReceiver fr;
+								    if (save_dirpath != null){ 
+								    	fr = new FileReceiver(fileConnection,save_dirpath + File.separator + fileName );
+								    }else{
+								    	fr = new FileReceiver(fileConnection,fileName);
+								    }
+									Thread t= new Thread(fr);
+									t.start(); 
+									echo("System","正在接收文件 ");
 							    }else{
-							    	fr = new FileReceiver(fileConnection,fileName);
+									//Send denial message
+									denyFileTransfer();
+							        JOptionPane.showOptionDialog(null,"拒絕接收文件 ", "消息",
+							        		JOptionPane.CLOSED_OPTION, 0, null, null, null);
+							        echo("Me","拒絕接收文件 ");
 							    }
-								Thread t= new Thread(fr);
-								t.start(); 
+
 							}else{
 								//Send denial message
 								denyFileTransfer();
+						        JOptionPane.showOptionDialog(null,"拒絕接收文件 ", "消息",
+						        		JOptionPane.CLOSED_OPTION, 0, null, null, null);
+						        echo("Me","拒絕接收文件 ");
 							}
 						//File transfer acceptance command	
 						}else if(reply_str.startsWith("FILEACPT")){
 							//TODO: Starting Send
+							this.setVisible(true);
 							int port = Integer.parseInt(reply_str.split(UNIT_DELIMITER)[1]);
 							FileSender fs = new FileSender(connection.getInetAddress(),port,sendfileInfo.getAbsolutePath());
 							Thread t = new Thread(fs);
 							t.start();
+							echo("System","對方接收文件，文件正在傳輸...");
 						//File transfer denial command			
 						}else if(reply_str.startsWith("FILEDENY")){
 							//TODO:Display Denial message
-							System.out.println("Deny");
+							this.setVisible(true);
+					        JOptionPane.showOptionDialog(null,"對方拒絕接受文件，傳輸中斷", "消息",
+					        		JOptionPane.CLOSED_OPTION, 0, null, null, null);
+					        echo("System","文件傳輸中斷");
 						}
 					}else{
 						
@@ -181,9 +201,11 @@ public class Session extends JDialog implements Runnable{
 	}
 	
 	public void closeConnection() throws IOException{
+		sayBye();
 		this.connection.close();
-		
 	}
+	
+	public boolean isActive(){ return !connection.isClosed();}
 	
 	public void sendData(String s) throws IOException{
 		msgOut.write(s);
@@ -192,6 +214,9 @@ public class Session extends JDialog implements Runnable{
 	
 	public void sayHello() throws IOException{ sendData (CMD_DELIMITER + "HELO" + 
 			UNIT_DELIMITER + user.getName() + END_DELIMITER);}
+	
+	public void sayBye() throws IOException{ sendData (CMD_DELIMITER + "BYEBYE" + 
+			 END_DELIMITER);}
 	
 	public void acceptFileTransfer(int port) throws IOException{ sendData( CMD_DELIMITER +
 			"FILEACPT" +  UNIT_DELIMITER  + Integer.toString(port) +END_DELIMITER); }
@@ -209,11 +234,19 @@ public class Session extends JDialog implements Runnable{
 		String s = textField.getText();            // s is the string that tang will send
 		textField.setText("");               // clear the Text Box
 		if (s.length() > 0) {
-			s = user.getName() + " " + dataStr  + "\n" + 
+			String temp = user.getName() + " " + dataStr  + "\n" + 
 					s  + END_DELIMITER;
-			sendData(s);
+			sendData(temp);
+			//Show as History
+			echo("ME",s);
 		}
 
+	}
+	
+	public void echo(String ID, String data){
+		String dataStr = getDateInString();
+		String temp = ID + " " + dataStr  + "\n" + data ;
+		display(temp);
 	}
 	
 	public void sendFileTransferRequest(String filename, long size)throws IOException{
@@ -236,7 +269,7 @@ public class Session extends JDialog implements Runnable{
 //GUI==================================
 	
 	public void display(String sString) {
-		textField_1.setText(textField_1.getText() + sString + "\n");		
+		textField_1.setText(textField_1.getText() + sString + "\n\n");		
 	}
 	
 	public void initGUI(){                        
@@ -270,6 +303,7 @@ public class Session extends JDialog implements Runnable{
 			    	sendfileInfo = new File(filepath);
 			    	//Send file transfer request
 			    	try{
+						echo("System","等待對方接收文件 ");
 				    	sendFileTransferRequest(sendfileInfo.getName(),sendfileInfo.length());
 			    	}
 			    	catch(IOException ex){

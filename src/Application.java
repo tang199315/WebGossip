@@ -1,9 +1,7 @@
 import java.net.*;
 import java.io.*;
 import java.util.*;
-import java.awt.BorderLayout;
-import java.awt.EventQueue;
-
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -11,7 +9,6 @@ import javax.swing.border.EmptyBorder;
 
 import java.awt.List;
 
-import javax.swing.JList;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 
@@ -33,11 +30,8 @@ import java.awt.event.WindowEvent;
 
 public class Application extends JFrame {
 	
-	private Socket connection2Server;
-	private BufferedReader inFormServer;
-	private BufferedWriter outToServer;
-	
 	private CentralServerSocket connection2CentralServer;
+	private Listener portListener;
 	private ServerSocket incomeRequest;
 	private User user;
 	private HashMap<String, Session> friend_status = new HashMap<String,Session>();
@@ -56,13 +50,8 @@ public class Application extends JFrame {
 			public void mouseClicked(MouseEvent e) {
 				if(e.getClickCount() == 2){               //设置双击事件
 					String selectedFriend = list.getSelectedItem();   //可以得到双击后选中的好友的学号
-					
-					//TODO
-					System.out.println(selectedFriend);
-					
 					Session currentSession = null;
 					//If there is a ongoing session run in Deamon mode, set visible
-					
 					if( (currentSession = friend_status.get(selectedFriend) )!=null){
 						currentSession.setVisible(true);
 					}else{
@@ -99,11 +88,28 @@ public class Application extends JFrame {
 		//init event Listener
 		addWindowListener(new WindowAdapter() {
 			@Override
-			public void windowClosed(WindowEvent e) {
-				/**
-				//添加点击小红叉响应事件在这里
-				 * 
-				 */	
+			public void windowClosing(WindowEvent e) {
+				try{
+					if (portListener!=null ){
+						portListener.shutdown();
+					}
+					if (connection2CentralServer!=null){
+						connection2CentralServer.logout(user);
+						connection2CentralServer.close();
+					}
+					//close all active sessions
+					Iterator iter = friend_status.entrySet().iterator();
+					while (iter.hasNext()){
+						Map.Entry<String,Session> entry = (Map.Entry<String,Session>) iter.next();
+						Session session = entry.getValue();
+						if (session != null && session.isActive())
+							session.closeConnection();
+					}
+					System.out.println("clear");
+					System.exit(1);
+				}catch(IOException ex){
+					ex.printStackTrace();
+				}
 			}
 		});
 		
@@ -122,7 +128,7 @@ public class Application extends JFrame {
 		catch (IOException ex){
 			ex.printStackTrace();
 		}
-		
+		this.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
 		this.setVisible(false);
 		
 	}
@@ -154,7 +160,7 @@ public class Application extends JFrame {
 			
 			//Init network socket
 			incomeRequest = new ServerSocket(12345);
-			Listener portListener = new Listener(incomeRequest,connection2CentralServer,
+			portListener = new Listener(incomeRequest,connection2CentralServer,
 										user,friend_status);
 			Thread t1 = new Thread(portListener);
 			t1.start();

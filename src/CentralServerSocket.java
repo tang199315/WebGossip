@@ -70,9 +70,12 @@ public class CentralServerSocket {
 	public String isOnline(String friend_name) throws IOException{
 		String reply = query("q" + friend_name);
 		if ("n".contentEquals(reply) || "Incorrect No.".contentEquals(reply))
-			return null;
+			//TODO: Remove
+			return "192.168.1.12";
 		else
 			return reply;
+		
+
 	}
 	
 	public void close()throws IOException{

@@ -7,13 +7,15 @@ public class FileReceiver implements Runnable{
 	private DataInputStream fis;
 	private DataOutputStream fos;
 	private Socket fileSocket;
+	private String filepath;
 	
-	public FileReceiver(Socket connection,String filename) throws IOException{
+	public FileReceiver(Socket connection,String filepath) throws IOException{
+		this.filepath = filepath;
 		fileSocket = connection;
 		fis = new DataInputStream(
 				fileSocket.getInputStream());
 		fos = new DataOutputStream(
-				new FileOutputStream(filename));
+				new FileOutputStream(filepath));
 	}
 	
 	public void run(){
@@ -25,7 +27,7 @@ public class FileReceiver implements Runnable{
 				fos.flush();
 			}
 	          JOptionPane.showOptionDialog(null,
-	        		  "FileRecieve OK : )", "消息",
+	        		  "FileRecieve OK \n" + "Saved to: "+ filepath, "消息",
 	              JOptionPane.CLOSED_OPTION, 0, null, null, null);
 			fileSocket.shutdownInput();
 	          

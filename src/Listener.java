@@ -1,15 +1,18 @@
 import java.net.*;
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class Listener implements Runnable {
 	private ServerSocket incomeRequest;
 	private CentralServerSocket connection2CentralServer;
 	private HashMap<String, Session> friend_status;
 	private User user;
+	private boolean isActive;
 	
 	public Listener(ServerSocket incomeRequest, CentralServerSocket connection2CentralServer,
 					User user, HashMap<String, Session> friend_status){
+		this.isActive = true;
 		this.incomeRequest = incomeRequest;
 		this.connection2CentralServer = connection2CentralServer;
 		this.user = user;
@@ -17,37 +20,36 @@ public class Listener implements Runnable {
 	}
 	
 	public void run(){
-	try{
-		while(true){
 			System.out.println("getOne");
 			Socket connection = null;
 			try{
-				while(true){
+				while(isActive){
 					//System.out.println("happy");
 					connection = incomeRequest.accept();	
-
 					//create a new thread for a new income connection2Friend
 					Session new_session = new Session(connection,connection2CentralServer,
 														user, friend_status,false);
 					Thread t = new Thread(new_session);
 					t.start();
 				}
-
+				//release resource
+				incomeRequest.close();
+				System.out.println("Listener: port release");
 			}
 			catch(IOException ex){
 				ex.printStackTrace();
 			}// end catch
+			
 			finally{
-				if (connection!=null) connection.close();
+				try{if (connection!=null) connection.close();}
+				catch(IOException ex){ex.printStackTrace();}
 			}
 		}
-	}
-	catch(IOException ex){
-		//Desired Port may be occupied 
-		ex.printStackTrace();
-	}
 	
-}
+	public void shutdown(){
+		isActive = false;
+	}
+
 	
 	
 	

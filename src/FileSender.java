@@ -28,7 +28,7 @@ public class FileSender implements Runnable{
 			fileSocket.shutdownOutput();
 			
 	          JOptionPane.showOptionDialog(null,
-	        		  "FileTransfer OK /n" + "Saved to: " + filepath, "消息",
+	        		  "FileTransfer OK ", "消息",
 	              JOptionPane.CLOSED_OPTION, 0, null, null, null);
 	          
 		}
