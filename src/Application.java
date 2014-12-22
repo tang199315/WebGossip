@@ -72,7 +72,7 @@ public class Application extends JFrame {
 							if( (IP = connection2CentralServer.isOnline(selectedFriend)) != null){
 								System.out.println("friend ip" + IP);
 								//Set up new session
-								Session newSession = new Session(new Socket(InetAddress.getByName(IP),0),
+								Session newSession = new Session(new Socket(InetAddress.getByName(IP),12345),
 										connection2CentralServer,user, friend_status, true);
 								//Refresh friend list
 								friend_status.put(selectedFriend,newSession);
@@ -162,7 +162,7 @@ public class Application extends JFrame {
 			this.setVisible(true);
 			
 			//TODO testing
-			System.out.println(connection2CentralServer.isOnline("2011011437"));	
+			System.out.println("MyIP:" + connection2CentralServer.isOnline(user.getName()));	
 			//TODO use while to wait??
 			while(true);
 

@@ -137,7 +137,7 @@ public class Session extends JDialog implements Runnable{
 
 							    FileReceiver fr;
 							    if (save_dirpath != null){ 
-							    	fr = new FileReceiver(fileConnection,save_dirpath + "\\" + fileName );
+							    	fr = new FileReceiver(fileConnection,save_dirpath + File.separator + fileName );
 							    }else{
 							    	fr = new FileReceiver(fileConnection,fileName);
 							    }
