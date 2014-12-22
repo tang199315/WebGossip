@@ -120,6 +120,7 @@ public class Session extends JDialog implements Runnable{
 							if ((JOptionPane.showOptionDialog(null,
 									"您想接受文件  " + fileName + " 吗？", "消息",
 									JOptionPane.YES_NO_OPTION, 0, null, null, null)) == 0){
+								
 								//Choose the path to save
 								JFileChooser jfc = new JFileChooser();
 								jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);

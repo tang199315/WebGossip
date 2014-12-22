@@ -6,8 +6,10 @@ public class FileSender implements Runnable{
 	private Socket fileSocket;
 	private DataInputStream fis;
 	private DataOutputStream fos;
+	private String filepath;
 	
 	public FileSender(InetAddress destIP, int destPort,String filepath) throws IOException{
+		this.filepath = filepath;
 		fileSocket = new Socket(destIP,destPort);
 		fis = new DataInputStream (
 					new FileInputStream(filepath));
@@ -23,11 +25,11 @@ public class FileSender implements Runnable{
 				fos.write(data, 0, len);
 				fos.flush();
 			}
-	          JOptionPane.showOptionDialog(null,
-	        		  "FileTransfer OK : )", "消息",
-	              JOptionPane.CLOSED_OPTION, 0, null, null, null);
-	          
 			fileSocket.shutdownOutput();
+			
+	          JOptionPane.showOptionDialog(null,
+	        		  "FileTransfer OK /n" + "Saved to: " + filepath, "消息",
+	              JOptionPane.CLOSED_OPTION, 0, null, null, null);
 	          
 		}
 		catch(IOException ex){
