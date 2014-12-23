@@ -113,9 +113,9 @@ public class Session extends JDialog implements Runnable{
 					        		JOptionPane.CLOSED_OPTION, 0, null, null, null);
 							connection.close();
 							friend_status.put(friend_name, null);
-							setVisible(false);
+							//Quit the current thread
+							break; 
 							
-						
 						//File request command
 						}else if(reply_str.startsWith("FILEREQ")){
 							//TODO
@@ -193,6 +193,7 @@ public class Session extends JDialog implements Runnable{
 					reply.delete(0,reply.length()); 
 				}
 			}
+			System.out.println("Session:Quit thread");
 		}
 	
 		catch(IOException ex){

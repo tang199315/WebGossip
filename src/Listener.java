@@ -48,6 +48,7 @@ public class Listener implements Runnable {
 	
 	public void shutdown(){
 		isActive = false;
+		System.out.println("shutdown Call");
 	}
 
 	
