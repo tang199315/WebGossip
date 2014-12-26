@@ -43,10 +43,9 @@ public class Login extends JDialog {
 
 	public Login() {
 		setBackground(Color.GRAY);
-		init();   //你默认是对的初始化
+		GUIinit();
 		this.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
 		this.setVisible(true);
-		
 		//Window Closing handler
 		this.addWindowListener(new WindowAdapter(){
 			public void windowClosing(WindowEvent event){
@@ -55,38 +54,23 @@ public class Login extends JDialog {
 		});
 	}
 	
-	
 	/**返回waitingJudge的值，如果是false，就是输入有问题，反之*/
-	public boolean getJudge(){
-		return (waitingJudge);
-	}
+	public boolean getJudge(){return (waitingJudge);}
 	
-	public void showError(){
-		textField_4.setText("用户名或密码错误");
-	}
+	public void showError(){textField_4.setText("用户名或密码错误");}
 	
-	public String getUsername() throws UnsupportedEncodingException {
-		return userName;
-//		byte[] bs = userName.getBytes();
-//		return new String(bs,"US-ASCII");
-	}
+	public String getUsername() throws UnsupportedEncodingException {return userName;}
 	
-	public String getPWD() throws UnsupportedEncodingException {
-		return password;
-//		byte[] bs = password.getBytes();
-//		return new String(bs,"US-ASCII");
-	}
+	public String getPWD() throws UnsupportedEncodingException {return password;}
 	
 	public void reset(){
 		waitingJudge = false;
-		textField.setText(""); //clear
+		textField.setText("");
 		textField_3.setText("");
-		//TODO
-		
 	}
 	
 	//GUI init
-	public void init(){
+	public void GUIinit(){
 		setTitle("\u767B\u5F55\u754C\u9762");
 		setBounds(100, 100, 301, 235);
 		getContentPane().setLayout(new BorderLayout());
@@ -119,11 +103,6 @@ public class Login extends JDialog {
 			public void actionPerformed(ActionEvent e) {
 				userName = textField.getText();
 				password = textField_3.getText();
-
-				
-				//TODO: Delete the following lines before production
-				//userName="2011011437";
-				//password = "net2014";
 				waitingJudge = true;
 			}
 		});	
