@@ -62,10 +62,10 @@ public class Session extends JDialog implements Runnable{
 		System.out.println("Sesson Local:" + connection.getLocalPort());
 		
 		msgIn= new BufferedReader(
-				new InputStreamReader(this.connection.getInputStream()));
+				new InputStreamReader(this.connection.getInputStream(),"UTF-8"));
 		
 		msgOut = new BufferedWriter(
-				new OutputStreamWriter(this.connection.getOutputStream()));
+				new OutputStreamWriter(this.connection.getOutputStream(),"UTF-8"));
 		
 		//GUI init
 		this.addWindowListener(new WindowAdapter() {
@@ -101,6 +101,7 @@ public class Session extends JDialog implements Runnable{
 					//Parse a command
 					if (reply.charAt(0) == CMD_DELIMITER){
 						reply_str = reply.toString().substring(1, reply.length()-1);
+						reply_str = new String(reply_str.getBytes(),"UTF-8");
 						//HELO command
 						if (reply_str.startsWith("HELO")){
 							//TODO
@@ -109,8 +110,10 @@ public class Session extends JDialog implements Runnable{
 							this.setTitle(friend_name);	
 						//BYEBYE command
 						}else if (reply_str.startsWith("BYEBYE")){
-					        JOptionPane.showOptionDialog(null,"对方己经下线", "消息",
-					        		JOptionPane.CLOSED_OPTION, 0, null, null, null);
+							if (this.isVisible()){
+						        JOptionPane.showOptionDialog(null,"对方己经下线", "消息",
+						        	JOptionPane.CLOSED_OPTION, 0, null, null, null);
+							}
 							connection.close();
 							friend_status.put(friend_name, null);
 							//Quit the current thread
@@ -272,13 +275,13 @@ public class Session extends JDialog implements Runnable{
 //GUI==================================
 	
 	public void display(String sString) {
-		textField_1.setText(textField_1.getText() + sString + "\n\n");		
+		textField_1.append(sString+"\n\n");
 	}
 	
 	public void initGUI(){                        
 		setBounds(100, 100, 583, 432);
 		{
-			textField = new TextArea();
+			textField = new TextArea(5,30);
 		}
 		{
 			textField_1 = new TextArea();
