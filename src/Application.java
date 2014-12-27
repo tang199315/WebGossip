@@ -100,9 +100,9 @@ public class Application extends JFrame {
 			public void mouseClicked(MouseEvent e) {
 				if(e.getClickCount() == 2){   //设置双击事件
 					String selectedFriend = list.getSelectedItem();   //可以得到双击后选中的好友的学号
-					Session currentSession = null;
+					Session currentSession = friend_status.get(selectedFriend);
 					//If there is a ongoing session run in Deamon mode, set visible
-					if( (currentSession = friend_status.get(selectedFriend) )!=null){
+					if( currentSession!=null && currentSession.isActive()){
 						currentSession.setVisible(true);
 					}else{
 						//Try to init a new session

@@ -109,7 +109,7 @@ public class Session extends JDialog implements Runnable{
 							this.setTitle(friend_name);	
 						//BYEBYE command
 						}else if (reply_str.startsWith("BYEBYE")){
-					        JOptionPane.showOptionDialog(null,"對方己經下線", "消息",
+					        JOptionPane.showOptionDialog(null,"对方己经下线", "消息",
 					        		JOptionPane.CLOSED_OPTION, 0, null, null, null);
 							connection.close();
 							friend_status.put(friend_name, null);
@@ -171,14 +171,14 @@ public class Session extends JDialog implements Runnable{
 							FileSender fs = new FileSender(connection.getInetAddress(),port,sendfileInfo.getAbsolutePath());
 							Thread t = new Thread(fs);
 							t.start();
-							echo("System","對方接收文件，文件正在傳輸...");
+							echo("System","对方接收文件，文件正在传输...");
 						//File transfer denial command			
 						}else if(reply_str.startsWith("FILEDENY")){
 							//TODO:Display Denial message
 							this.setVisible(true);
-					        JOptionPane.showOptionDialog(null,"對方拒絕接受文件，傳輸中斷", "消息",
+					        JOptionPane.showOptionDialog(null,"对方拒绝接受文件，传输中断", "消息",
 					        		JOptionPane.CLOSED_OPTION, 0, null, null, null);
-					        echo("System","文件傳輸中斷");
+					        echo("System","文件传输中断");
 						}
 					}else{
 						
@@ -194,6 +194,8 @@ public class Session extends JDialog implements Runnable{
 				}
 			}
 			System.out.println("Session:Quit thread");
+			this.connection.close();
+			this.dispose();
 		}
 	
 		catch(IOException ex){
